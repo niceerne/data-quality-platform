@@ -1,0 +1,39 @@
+sources:
+  files:
+    - name: customers
+      path: data/sample/customers.csv
+      target_table: raw.customers
+    - name: orders
+      path: data/sample/orders.csv
+      target_table: raw.orders
+  api:
+    - name: api_users
+      url_env: SOURCE_API_URL
+      target_table: raw.api_users
+  database:
+    - name: db_products
+      url_env: SOURCE_DB_URL
+      query: "SELECT * FROM products"
+      target_table: raw.db_products
+
+quality:
+  raw.customers:
+    expected_columns: [customer_id, name, email, age, signup_date]
+    missing:
+      - {column: email, max_rate: 0.05}
+      - {column: name, max_rate: 0.0}
+    duplicates:
+      - {keys: [customer_id]}
+    invalid:
+      - {column: email, rule: email}
+      - {column: age, rule: range, min: 0, max: 120}
+      - {column: signup_date, rule: not_future}
+  raw.orders:
+    expected_columns: [order_id, customer_id, amount, order_date]
+    missing:
+      - {column: customer_id, max_rate: 0.0}
+    duplicates:
+      - {keys: [order_id]}
+    invalid:
+      - {column: amount, rule: range, min: 0}
+      - {column: order_date, rule: not_future}
